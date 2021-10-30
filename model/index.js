@@ -1,15 +1,71 @@
-// const fs = require('fs/promises')
-// const contacts = require('./contacts.json')
+const fs = require('fs/promises');
+const crypto = require('crypto');
 
-const listContacts = async () => {}
+const contactsPath = require('./contactsPath');
+const getAllContacts = require('../utils/getAllContacts');
 
-const getContactById = async (contactId) => {}
+const listContacts = async () => await getAllContacts(contactsPath);
 
-const removeContact = async (contactId) => {}
+const getContactById = async (contactId) => {
+  const allContacts = await getAllContacts();
 
-const addContact = async (body) => {}
+  const desiredContact = allContacts.find(
+    ({ id }) => id.toString() === contactId.toString()
+  );
 
-const updateContact = async (contactId, body) => {}
+  if (desiredContact) {
+    return desiredContact;
+  } else {
+    return null;
+  }
+};
+
+const removeContact = async (contactId) => {
+  const prevContacts = await getAllContacts();
+  const deletedContact = prevContacts.find(
+    ({ id }) => id.toString() === contactId.toString()
+  );
+
+  if (!deletedContact) {
+    return null;
+  }
+
+  const newContacts = prevContacts.filter(
+    ({ id }) => id.toString() !== contactId.toString()
+  );
+
+  await fs.writeFile(contactsPath, JSON.stringify(newContacts, null, 2));
+
+  return newContacts;
+};
+
+const addContact = async ({ name, email, phone }) => {
+  const prevContacts = await getAllContacts();
+  const newContact = { id: crypto.randomUUID(), name, email, phone };
+  const updatedContacts = [...prevContacts, newContact];
+
+  await fs.writeFile(contactsPath, JSON.stringify(updatedContacts, null, 2));
+
+  return newContact;
+};
+
+const updateContact = async (contactId, body) => {
+  const allContacts = await getAllContacts();
+
+  const updatedContactIdx = allContacts.findIndex(
+    (contact) => contact.id.toString() === contactId.toString()
+  );
+
+  if (updatedContactIdx === -1) {
+    return null;
+  }
+
+  allContacts[updatedContactIdx] = { id: contactId, ...body };
+
+  await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
+
+  return allContacts[updatedContactIdx];
+};
 
 module.exports = {
   listContacts,
@@ -17,4 +73,4 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
-}
+};
