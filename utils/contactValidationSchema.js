@@ -9,6 +9,7 @@ const contactValidationSchema = Joi.object({
     })
     .required(),
   phone: Joi.string().min(7).max(20).required(),
+  favorite: Joi.boolean(),
 });
 
 module.exports = contactValidationSchema;
