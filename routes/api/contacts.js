@@ -19,25 +19,20 @@ router.post(
   controllerErrorCatcher(contactsOperations.addContact)
 );
 
-router.delete(
-  '/:contactId',
-  controllerErrorCatcher(contactsOperations.removeContact)
-);
-
 router.put(
   '/:contactId',
   makeContactsValidation(contactValidationSchema),
   controllerErrorCatcher(contactsOperations.updateContact)
 );
 
-router.put(
+router.patch(
   '/:contactId/favorite',
   controllerErrorCatcher(contactsOperations.updateStatusContact)
 );
 
-router.patch(
-  '/:contactId/favorite',
-  controllerErrorCatcher(contactsOperations.updateStatusContact)
+router.delete(
+  '/:contactId',
+  controllerErrorCatcher(contactsOperations.removeContact)
 );
 
 module.exports = router;
