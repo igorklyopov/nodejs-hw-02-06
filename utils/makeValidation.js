@@ -1,4 +1,4 @@
-const makeContactsValidation = (schema) => (req, _, next) => {
+const makeValidation = (schema) => (req, _, next) => {
   const { error } = schema.validate(req.body);
 
   if (error) {
@@ -8,4 +8,4 @@ const makeContactsValidation = (schema) => (req, _, next) => {
   next();
 };
 
-module.exports = makeContactsValidation;
+module.exports = makeValidation;
