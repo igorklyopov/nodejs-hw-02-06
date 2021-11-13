@@ -3,7 +3,18 @@ const { NotFound, BadRequest } = require('http-errors');
 const { Contact } = require('../model/contactsModel');
 
 const listContacts = async (req, res) => {
-  const contactsAll = await Contact.find({});
+  const { page, limit, favorite } = req.query;
+
+  const { _id } = req.user;
+  const skipValue = (page - 1) * limit;
+  const searchParams = { owner: _id };
+  if (favorite) searchParams.favorite = favorite;
+
+  const contactsAll = await Contact.find(
+    searchParams,
+    { owner: 0 },
+    { skip: skipValue < 0 && skipValue, limit: limit < 0 && Number(limit) }
+  );
 
   res.json({
     status: 'success',
@@ -14,7 +25,10 @@ const listContacts = async (req, res) => {
 
 const getContactById = async (req, res, next) => {
   const { contactId } = req.params;
-  const desiredContact = await Contact.findById(contactId);
+  const { _id: owner } = req.user;
+  console.log(owner);
+
+  const desiredContact = await Contact.findById(contactId, { owner: 0 });
 
   if (!desiredContact) {
     throw new NotFound('Not found');
@@ -43,7 +57,9 @@ const removeContact = async (req, res) => {
 };
 
 const addContact = async (req, res) => {
-  const newContact = await Contact(req.body).save();
+  const newContactData = { ...req.body, owner: req.user._id };
+
+  const newContact = await Contact.create(newContactData);
 
   res.status(201).json({
     status: 'success',
@@ -88,7 +104,7 @@ const updateStatusContact = async (req, res) => {
   }
 
   res.status(201).json({
-    status: 'success',
+    status: 'created',
     code: 201,
     data: updatedStatusContact,
   });
