@@ -31,4 +31,10 @@ router.get(
   controllerErrorCatcher(usersOperations.getCurrentUser)
 );
 
+router.patch(
+  '/',
+  controllerErrorCatcher(authenticate),
+  controllerErrorCatcher(usersOperations.updateSubscription)
+);
+
 module.exports = router;

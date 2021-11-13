@@ -90,9 +90,9 @@ const getCurrentUser = async (req, res) => {
 const updateSubscription = async (req, res) => {
   const { _id } = req.user;
   const updatedUser = await User.findByIdAndUpdate(_id, req.body, {
-    _id: 0,
-    password: 0,
-    token: 0,
+    new: true,
+    select: '-id -password -token',
+    runValidators: true,
   });
 
   if (!updatedUser) {

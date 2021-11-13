@@ -25,6 +25,8 @@ const listContacts = async (req, res) => {
 
 const getContactById = async (req, res, next) => {
   const { contactId } = req.params;
+  const { _id: owner } = req.user;
+  console.log(owner);
 
   const desiredContact = await Contact.findById(contactId, { owner: 0 });
 
