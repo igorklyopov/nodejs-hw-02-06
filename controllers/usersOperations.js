@@ -59,7 +59,7 @@ const logIn = async (req, res) => {
 
 const logOut = async (req, res) => {
   const { _id } = req.user;
-  const user = await User.findByIdAndUpdate(_id, { token: null });
+  const user = await User.findOneAndUpdate(_id, { token: null });
 
   if (!user) {
     throw new Unauthorized('Not authorized');
@@ -70,7 +70,7 @@ const logOut = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   const { _id } = req.user;
-  const currentUser = await User.findById(_id, {
+  const currentUser = await User.findOne(_id, {
     _id: 0,
     password: 0,
     token: 0,
@@ -89,9 +89,9 @@ const getCurrentUser = async (req, res) => {
 
 const updateSubscription = async (req, res) => {
   const { _id } = req.user;
-  const updatedUser = await User.findByIdAndUpdate(_id, req.body, {
+  const updatedUser = await User.findOneAndUpdate(_id, req.body, {
     new: true,
-    select: '-id -password -token',
+    select: '-_id -password -token',
     runValidators: true,
   });
 
