@@ -26,9 +26,11 @@ const listContacts = async (req, res) => {
 const getContactById = async (req, res, next) => {
   const { contactId } = req.params;
   const { _id: owner } = req.user;
-  console.log(owner);
 
-  const desiredContact = await Contact.findById(contactId, { owner: 0 });
+  const desiredContact = await Contact.findOne(
+    { _id: contactId, owner },
+    { owner: 0 }
+  );
 
   if (!desiredContact) {
     throw new NotFound('Not found');
@@ -43,7 +45,11 @@ const getContactById = async (req, res, next) => {
 
 const removeContact = async (req, res) => {
   const { contactId } = req.params;
-  const deletedContact = await Contact.findByIdAndRemove(contactId);
+  const { _id: owner } = req.user;
+  const deletedContact = await Contact.findOneAndRemove({
+    _id: contactId,
+    owner,
+  });
 
   if (!deletedContact) {
     throw new NotFound('Not found');
@@ -70,9 +76,14 @@ const addContact = async (req, res) => {
 
 const updateContact = async (req, res) => {
   const { contactId } = req.params;
-  const updatedContact = await Contact.findByIdAndUpdate(contactId, req.body, {
-    new: true,
-  });
+  const { _id: owner } = req.user;
+  const updatedContact = await Contact.findOneAndUpdate(
+    { _id: contactId, owner },
+    req.body,
+    {
+      new: true,
+    }
+  );
 
   if (!updatedContact) {
     throw new NotFound('Not found');
@@ -87,10 +98,11 @@ const updateContact = async (req, res) => {
 
 const updateStatusContact = async (req, res) => {
   const { contactId } = req.params;
+  const { _id: owner } = req.user;
   const { favorite } = req.body;
 
-  const updatedStatusContact = await Contact.findByIdAndUpdate(
-    contactId,
+  const updatedStatusContact = await Contact.findOneAndUpdate(
+    { _id: contactId, owner },
     { favorite },
     { new: true }
   );
