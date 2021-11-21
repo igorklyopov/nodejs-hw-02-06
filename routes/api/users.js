@@ -6,6 +6,7 @@ const controllerErrorCatcher = require('../../utils/controllerErrorCatcher');
 const userValidationSchema = require('../../utils/userValidationSchema');
 const makeValidation = require('../../utils/makeValidation');
 const authenticate = require('../../utils/authenticate');
+const uploadAvatar = require('../../utils/uploadAvatar');
 
 router.post(
   '/signup',
@@ -35,6 +36,13 @@ router.patch(
   '/',
   controllerErrorCatcher(authenticate),
   controllerErrorCatcher(usersOperations.updateSubscription)
+);
+
+router.patch(
+  '/avatars',
+  controllerErrorCatcher(authenticate),
+  uploadAvatar.single('avatarURL'),
+  controllerErrorCatcher(usersOperations.updateUserAvatar)
 );
 
 module.exports = router;
