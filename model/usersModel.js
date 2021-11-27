@@ -23,6 +23,13 @@ const modelContactsSchema = Schema(
       type: String,
       default: null,
     },
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    verifyToken: {
+      type: String,
+    },
   },
 
   { versionKey: false }

@@ -1,14 +1,22 @@
 const fs = require('fs/promises');
 const path = require('path');
-const { Conflict, Unauthorized, UnsupportedMediaType } = require('http-errors');
+const {
+  Conflict,
+  Unauthorized,
+  UnsupportedMediaType,
+  NotFound,
+  BadRequest,
+} = require('http-errors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
 const Jimp = require('jimp');
+const { nanoid } = require('nanoid');
 
 const { JWT_KEY } = process.env;
 
 const { User } = require('../model/usersModel');
+const { sendLetter } = require('../utils/mailTransporter');
 
 const avatarsDir = path.join(__dirname, '../public/avatars');
 
@@ -21,13 +29,23 @@ const signUp = async (req, res) => {
     throw new Conflict('Email in use');
   }
 
+  const verifyToken = nanoid();
   const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 
   const newUser = await User.create({
     password: hashedPassword,
     email,
     avatarURL,
+    verifyToken,
   });
+
+  const confirmationLetter = {
+    to: email,
+    subject: 'Подтверждение регистрации',
+    text: `<a href="http://localhost:3000/api/users/verify/${verificationToken}">Нажмите для подтверждения email</a>`,
+  };
+
+  await sendLetter(confirmationLetter);
 
   const userAvatarFolder = path.join(avatarsDir, String(newUser._id));
   await fs.mkdir(userAvatarFolder);
@@ -46,7 +64,7 @@ const logIn = async (req, res) => {
   const { password, email } = req.body;
   const user = await User.findOne({ email });
 
-  if (!user) {
+  if (!user || !user.verify) {
     throw new Unauthorized('Email or password is wrong');
   }
   const comparePassword = bcrypt.compareSync(password, user.password);
@@ -163,6 +181,58 @@ const updateUserAvatar = async (req, res, next) => {
   }
 };
 
+const verifyUser = async (req, res) => {
+  const { verificationToken } = req.params;
+  const verifiedUser = await User.findOne(verificationToken, {
+    _id: 0,
+    password: 0,
+    token: 0,
+  });
+
+  if (!verifiedUser) {
+    throw new NotFound('User not found');
+  }
+
+  await User.findByIdAndUpdate(verifiedUser._id, {
+    verifyToken: null,
+    verify: true,
+  });
+
+  res.json({
+    status: 'OK',
+    code: 200,
+    message: 'Verification successful',
+  });
+};
+
+const repeatVerificationUser = async (req, res) => {
+  const { email } = req.body;
+
+  const currentUser = await User.findOne(email);
+
+  if (!currentUser) {
+    throw new NotFound('User not found');
+  }
+
+  if (!currentUser.verifyToken || currentUser.verifyToken.length < 1) {
+    throw new BadRequest('Verification has already been passed');
+  }
+
+  const confirmationLetter = {
+    to: email,
+    subject: 'Подтверждение регистрации',
+    text: `<a href="http://localhost:3000/api/users/verify/${currentUser.verifyToken}">Нажмите для подтверждения email</a>`,
+  };
+
+  await sendLetter(confirmationLetter);
+
+  res.json({
+    status: 'OK',
+    code: 200,
+    message: 'Verification email sent',
+  });
+};
+
 module.exports = {
   signUp,
   logIn,
@@ -170,4 +240,6 @@ module.exports = {
   getCurrentUser,
   updateSubscription,
   updateUserAvatar,
+  verifyUser,
+  repeatVerificationUser,
 };
