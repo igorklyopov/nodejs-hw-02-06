@@ -45,4 +45,14 @@ router.patch(
   controllerErrorCatcher(usersOperations.updateUserAvatar)
 );
 
+router.get(
+  '/verify/:verificationToken',
+  controllerErrorCatcher(usersOperations.verifyUser)
+);
+
+router.post(
+  '/verify/',
+  controllerErrorCatcher(usersOperations.repeatVerificationUser)
+);
+
 module.exports = router;
